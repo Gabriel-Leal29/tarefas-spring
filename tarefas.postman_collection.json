@@ -1,0 +1,150 @@
+{
+  "info": {
+    "name": "Tarefas API",
+    "description": "Testes da API de tarefas. Serve para as duas versões (Servlet e Spring Boot): basta trocar a variável baseUrl da coleção. Use 'Run collection' para executar tudo em ordem.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8081" },
+    { "key": "id", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Criar tarefa (201)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+        "pm.test('Header Location presente', () => pm.response.to.have.header('Location'));",
+        "pm.test('Id gerado pela aplicação', () => pm.expect(pm.response.json().id).to.be.a('number'));",
+        "pm.collectionVariables.set('id', pm.response.json().id);"
+      ] } }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"titulo\": \"Estudar Servlet\",\n  \"descricao\": \"Ler sobre HttpServlet\",\n  \"status\": \"EM_ANDAMENTO\",\n  \"prioridade\": \"ALTA\"\n}", "options": { "raw": { "language": "json" } } },
+        "url": "{{baseUrl}}/tarefas"
+      }
+    },
+    {
+      "name": "Criar tarefa só com título (201, valores padrão)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+        "pm.test('Status padrão PENDENTE', () => pm.expect(pm.response.json().status).to.eql('PENDENTE'));",
+        "pm.test('Prioridade padrão MEDIA', () => pm.expect(pm.response.json().prioridade).to.eql('MEDIA'));"
+      ] } }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"titulo\": \"Fazer a versão Spring Boot\"\n}", "options": { "raw": { "language": "json" } } },
+        "url": "{{baseUrl}}/tarefas"
+      }
+    },
+    {
+      "name": "Listar tarefas (200)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+        "pm.test('Retorna uma lista', () => pm.expect(pm.response.json()).to.be.an('array'));"
+      ] } }],
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/tarefas" }
+    },
+    {
+      "name": "Listar com filtro de status (200)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+        "pm.test('Todas com status PENDENTE', () => pm.response.json().forEach(t => pm.expect(t.status).to.eql('PENDENTE')));"
+      ] } }],
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/tarefas?status=PENDENTE" }
+    },
+    {
+      "name": "Buscar tarefa (200)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+        "pm.test('Id correto', () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get('id'))));"
+      ] } }],
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/tarefas/{{id}}" }
+    },
+    {
+      "name": "Editar tarefa (200)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+        "pm.test('Status alterado', () => pm.expect(pm.response.json().status).to.eql('CONCLUIDA'));",
+        "pm.test('Título mantido', () => pm.expect(pm.response.json().titulo).to.eql('Estudar Servlet'));"
+      ] } }],
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"status\": \"CONCLUIDA\"\n}", "options": { "raw": { "language": "json" } } },
+        "url": "{{baseUrl}}/tarefas/{{id}}"
+      }
+    },
+    {
+      "name": "Excluir tarefa (204)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status 204 No Content', () => pm.response.to.have.status(204));"
+      ] } }],
+      "request": { "method": "DELETE", "header": [], "url": "{{baseUrl}}/tarefas/{{id}}" }
+    },
+    {
+      "name": "Buscar tarefa excluída (404)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));"
+      ] } }],
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/tarefas/{{id}}" }
+    },
+    {
+      "name": "Editar tarefa inexistente (404)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));"
+      ] } }],
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"status\": \"CONCLUIDA\"\n}", "options": { "raw": { "language": "json" } } },
+        "url": "{{baseUrl}}/tarefas/{{id}}"
+      }
+    },
+    {
+      "name": "Criar sem título (400)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status 400 Bad Request', () => pm.response.to.have.status(400));"
+      ] } }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"descricao\": \"sem título\"\n}", "options": { "raw": { "language": "json" } } },
+        "url": "{{baseUrl}}/tarefas"
+      }
+    },
+    {
+      "name": "Criar com status inválido (400)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status 400 Bad Request', () => pm.response.to.have.status(400));"
+      ] } }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"titulo\": \"Teste\",\n  \"status\": \"FEITO\"\n}", "options": { "raw": { "language": "json" } } },
+        "url": "{{baseUrl}}/tarefas"
+      }
+    },
+    {
+      "name": "Criar com Content-Type errado (415)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status 415 Unsupported Media Type', () => pm.response.to.have.status(415));"
+      ] } }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "text/plain" }],
+        "body": { "mode": "raw", "raw": "titulo=Teste", "options": { "raw": { "language": "text" } } },
+        "url": "{{baseUrl}}/tarefas"
+      }
+    },
+    {
+      "name": "Excluir a coleção inteira (405)",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Status 405 Method Not Allowed', () => pm.response.to.have.status(405));",
+        "pm.test('Header Allow presente', () => pm.response.to.have.header('Allow'));"
+      ] } }],
+      "request": { "method": "DELETE", "header": [], "url": "{{baseUrl}}/tarefas" }
+    }
+  ]
+}
