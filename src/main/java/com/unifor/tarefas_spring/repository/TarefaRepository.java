@@ -3,57 +3,24 @@ package com.unifor.tarefas_spring.repository;
 import com.unifor.tarefas_spring.model.Prioridade;
 import com.unifor.tarefas_spring.model.Status;
 import com.unifor.tarefas_spring.model.Tarefa;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
-@Repository
-public class TarefaRepository {
-    private final Map<Long, Tarefa> tarefas = new ConcurrentHashMap<>();
-    private final AtomicLong proximoId = new AtomicLong(1);
+/**
+ * Repositório JPA: o Spring Data gera a implementação em tempo de execução.
+ * O CRUD básico (findById, save, existsById, deleteById...) vem de {@link JpaRepository}.
+ */
+public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
 
-    public List<Tarefa> listar(Status status, Prioridade prioridade) {
-        return tarefas.values().stream()
-                .filter(t -> status == null || t.getStatus() == status)
-                .filter(t -> prioridade == null || t.getPrioridade() == prioridade)
-                .sorted(Comparator.comparing(Tarefa::getId))
-                .toList();
-    }
-
-    public Optional<Tarefa> buscarPorId(Long id) {
-        return Optional.ofNullable(tarefas.get(id));
-    }
-
-    public Tarefa salvar(Tarefa tarefa) {
-        tarefa.setId(proximoId.getAndIncrement());
-        tarefas.put(tarefa.getId(), tarefa);
-        return tarefa;
-    }
-
-    public Optional<Tarefa> atualizar(Long id, Tarefa alteracoes) {
-        return Optional.ofNullable(tarefas.computeIfPresent(id, (chave, atual) -> {
-            if (alteracoes.getTitulo() != null) {
-                atual.setTitulo(alteracoes.getTitulo());
-            }
-            if (alteracoes.getDescricao() != null) {
-                atual.setDescricao(alteracoes.getDescricao());
-            }
-            if (alteracoes.getStatus() != null) {
-                atual.setStatus(alteracoes.getStatus());
-            }
-            if (alteracoes.getPrioridade() != null) {
-                atual.setPrioridade(alteracoes.getPrioridade());
-            }
-            return atual;
-        }));
-    }
-
-    public boolean remover(Long id) {
-        return tarefas.remove(id) != null;
-    }
+    /** Listagem com filtros opcionais: o filtro que vier nulo não é aplicado. */
+    @Query("""
+            select t from Tarefa t
+            where (:status is null or t.status = :status)
+              and (:prioridade is null or t.prioridade = :prioridade)
+            order by t.id
+            """)
+    List<Tarefa> listar(@Param("status") Status status, @Param("prioridade") Prioridade prioridade);
 }
