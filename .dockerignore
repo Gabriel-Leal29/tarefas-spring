@@ -1,0 +1,16 @@
+# O que não precisa ir para dentro do build da imagem (só o pom.xml e o src/ são usados)
+target/
+.git/
+.idea/
+.vscode/
+*.iml
+.mvn/
+mvnw
+mvnw.cmd
+HELP.md
+README.md
+*.postman_collection.json
+Dockerfile
+docker-compose.yml
+.env
+.env.example
