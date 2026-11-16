@@ -15,9 +15,13 @@ import java.util.List;
  */
 public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
 
-    /** Listagem com filtros opcionais: o filtro que vier nulo não é aplicado. */
+    /**
+     * Listagem com filtros opcionais: o filtro que vier nulo não é aplicado.
+     * O "left join fetch" traz a categoria na mesma consulta (e mantém as tarefas sem categoria).
+     */
     @Query("""
             select t from Tarefa t
+            left join fetch t.categoria
             where (:status is null or t.status = :status)
               and (:prioridade is null or t.prioridade = :prioridade)
             order by t.id

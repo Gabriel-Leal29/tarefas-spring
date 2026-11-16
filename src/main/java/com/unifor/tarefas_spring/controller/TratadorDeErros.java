@@ -1,5 +1,7 @@
 package com.unifor.tarefas_spring.controller;
 
+import com.unifor.tarefas_spring.exception.CategoriaNaoEncontradaException;
+import com.unifor.tarefas_spring.exception.ConflitoException;
 import com.unifor.tarefas_spring.exception.DadosInvalidosException;
 import com.unifor.tarefas_spring.exception.TarefaNaoEncontradaException;
 import com.unifor.tarefas_spring.model.ErroResposta;
@@ -7,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -31,14 +34,29 @@ public class TratadorDeErros extends ResponseEntityExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(TratadorDeErros.class);
 
-    @ExceptionHandler(TarefaNaoEncontradaException.class)
-    public ResponseEntity<ErroResposta> tarefaNaoEncontrada(TarefaNaoEncontradaException e) {
+    @ExceptionHandler({TarefaNaoEncontradaException.class, CategoriaNaoEncontradaException.class})
+    public ResponseEntity<ErroResposta> naoEncontrado(RuntimeException e) {
         return erro(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
     @ExceptionHandler(DadosInvalidosException.class)
     public ResponseEntity<ErroResposta> dadosInvalidos(DadosInvalidosException e) {
         return erro(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(ConflitoException.class)
+    public ResponseEntity<ErroResposta> conflito(ConflitoException e) {
+        return erro(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    /**
+     * O banco recusou a operação por uma restrição (unique, chave estrangeira). As validações do service
+     * já evitam isso; aqui cobre o caso de duas requisições simultâneas passarem pela validação juntas.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErroResposta> violacaoDeRestricao(DataIntegrityViolationException e) {
+        log.warn("Restrição do banco violada: {}", e.getMostSpecificCause().getMessage());
+        return erro(HttpStatus.CONFLICT, "A operação conflita com dados já gravados");
     }
 
     /** Qualquer outra exceção: 500, sem expor detalhes internos ao cliente. */

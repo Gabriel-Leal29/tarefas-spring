@@ -2,9 +2,11 @@ package com.unifor.tarefas_spring.service;
 
 import com.unifor.tarefas_spring.exception.DadosInvalidosException;
 import com.unifor.tarefas_spring.exception.TarefaNaoEncontradaException;
+import com.unifor.tarefas_spring.model.Categoria;
 import com.unifor.tarefas_spring.model.Prioridade;
 import com.unifor.tarefas_spring.model.Status;
 import com.unifor.tarefas_spring.model.Tarefa;
+import com.unifor.tarefas_spring.repository.CategoriaRepository;
 import com.unifor.tarefas_spring.repository.TarefaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,10 +17,12 @@ import java.util.List;
 public class TarefaService {
 
     private final TarefaRepository repository;
+    private final CategoriaRepository categoriaRepository;
 
-    // Injeção pelo construtor: o Spring entrega o bean TarefaRepository que ele mesmo criou
-    public TarefaService(TarefaRepository repository) {
+    // Injeção pelo construtor: o Spring entrega os beans de repositório que ele mesmo criou
+    public TarefaService(TarefaRepository repository, CategoriaRepository categoriaRepository) {
         this.repository = repository;
+        this.categoriaRepository = categoriaRepository;
     }
 
     @Transactional(readOnly = true)
@@ -44,6 +48,9 @@ public class TarefaService {
         }
         if (nova.getPrioridade() == null) {
             nova.setPrioridade(Prioridade.MEDIA);
+        }
+        if (nova.getCategoria() != null) {
+            nova.setCategoria(buscarCategoria(nova.getCategoria()));
         }
         return repository.save(nova);
     }
@@ -72,6 +79,9 @@ public class TarefaService {
         if (alteracoes.getPrioridade() != null) {
             atual.setPrioridade(alteracoes.getPrioridade());
         }
+        if (alteracoes.getCategoria() != null) {
+            atual.setCategoria(buscarCategoria(alteracoes.getCategoria()));
+        }
         return atual;
     }
 
@@ -81,6 +91,19 @@ public class TarefaService {
             throw new TarefaNaoEncontradaException(id);
         }
         repository.deleteById(id);
+    }
+
+    /**
+     * No JSON, a categoria vem só com o id: {"categoria": {"id": 1}}.
+     * Troca esse objeto pela categoria gravada no banco; se ela não existir, o pedido é inválido (400).
+     */
+    private Categoria buscarCategoria(Categoria enviada) {
+        Long id = enviada.getId();
+        if (id == null) {
+            throw new DadosInvalidosException("Informe o 'id' da categoria");
+        }
+        return categoriaRepository.findById(id)
+                .orElseThrow(() -> new DadosInvalidosException("A categoria " + id + " não existe"));
     }
 
     /** Evita que o banco recuse o INSERT/UPDATE (e a API devolva 500) por texto maior que a coluna. */

@@ -7,6 +7,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -44,4 +46,13 @@ public class Tarefa {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Prioridade prioridade;
+
+    /**
+     * Lado dono do relacionamento N:1: cria a coluna categoria_id (chave estrangeira para categorias).
+     * É opcional (uma tarefa pode não ter categoria). O @ManyToOne é carregado junto com a tarefa
+     * (EAGER, o padrão), então a categoria sempre aparece no JSON da tarefa.
+     */
+    @ManyToOne
+    @JoinColumn(name = "categoria_id")
+    private Categoria categoria;
 }
