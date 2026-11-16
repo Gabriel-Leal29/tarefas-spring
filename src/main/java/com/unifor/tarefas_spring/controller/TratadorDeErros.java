@@ -49,24 +49,18 @@ public class TratadorDeErros extends ResponseEntityExceptionHandler {
         return erro(HttpStatus.CONFLICT, e.getMessage());
     }
 
-    /**
-     * O banco recusou a operação por uma restrição (unique, chave estrangeira). As validações do service
-     * já evitam isso; aqui cobre o caso de duas requisições simultâneas passarem pela validação juntas.
-     */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErroResposta> violacaoDeRestricao(DataIntegrityViolationException e) {
         log.warn("Restrição do banco violada: {}", e.getMostSpecificCause().getMessage());
         return erro(HttpStatus.CONFLICT, "A operação conflita com dados já gravados");
     }
 
-    /** Qualquer outra exceção: 500, sem expor detalhes internos ao cliente. */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErroResposta> erroInesperado(Exception e, HttpServletRequest req) {
         log.error("Erro inesperado em {} {}", req.getMethod(), req.getRequestURI(), e);
         return erro(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno no servidor");
     }
 
-    /** Exceções do Spring MVC: mantém o status e os headers definidos pelo Spring e troca só o corpo. */
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(Exception ex, @Nullable Object body, HttpHeaders headers,
                                                              HttpStatusCode statusCode, WebRequest request) {
@@ -85,9 +79,7 @@ public class TratadorDeErros extends ResponseEntityExceptionHandler {
                 .body(new ErroResposta(statusCode.value(), mensagem));
     }
 
-    /** JSON malformado/ausente ou com valor inválido em algum campo. */
     private String mensagemJsonInvalido(HttpMessageNotReadableException e) {
-        // Ex.: {"status": "FEITO"}, valor que não existe no enum
         if (e.getCause() instanceof InvalidFormatException f) {
             String campo = f.getPath().isEmpty() ? "" : f.getPath().get(0).getPropertyName();
             String mensagem = "Valor inválido para o campo '" + campo + "': " + f.getValue();
@@ -99,7 +91,6 @@ public class TratadorDeErros extends ResponseEntityExceptionHandler {
         return "JSON inválido ou ausente no corpo da requisição";
     }
 
-    /** Parâmetro da URL que não pôde ser convertido: /tarefas/abc ou ?status=FEITO */
     private String mensagemParametroInvalido(MethodArgumentTypeMismatchException e) {
         Class<?> tipo = e.getRequiredType();
         if (tipo != null && tipo.isEnum()) {

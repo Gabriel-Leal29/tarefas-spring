@@ -19,7 +19,6 @@ public class TarefaService {
     private final TarefaRepository repository;
     private final CategoriaRepository categoriaRepository;
 
-    // Injeção pelo construtor: o Spring entrega os beans de repositório que ele mesmo criou
     public TarefaService(TarefaRepository repository, CategoriaRepository categoriaRepository) {
         this.repository = repository;
         this.categoriaRepository = categoriaRepository;
@@ -41,7 +40,6 @@ public class TarefaService {
             throw new DadosInvalidosException("O campo 'titulo' é obrigatório");
         }
         validarTamanhos(nova);
-        // O id é gerado pelo banco. Se vier no corpo, é descartado (senão o save faria um update)
         nova.setId(null);
         if (nova.getStatus() == null) {
             nova.setStatus(Status.PENDENTE);
@@ -55,11 +53,6 @@ public class TarefaService {
         return repository.save(nova);
     }
 
-    /**
-     * Altera só os campos enviados (os que vierem nulos continuam iguais).
-     * Não precisa chamar save: a tarefa buscada fica gerenciada pelo Hibernate dentro da transação,
-     * e as alterações são gravadas com um UPDATE no commit (dirty checking).
-     */
     @Transactional
     public Tarefa editar(Long id, Tarefa alteracoes) {
         if (alteracoes.getTitulo() != null && alteracoes.getTitulo().isBlank()) {
@@ -93,10 +86,6 @@ public class TarefaService {
         repository.deleteById(id);
     }
 
-    /**
-     * No JSON, a categoria vem só com o id: {"categoria": {"id": 1}}.
-     * Troca esse objeto pela categoria gravada no banco; se ela não existir, o pedido é inválido (400).
-     */
     private Categoria buscarCategoria(Categoria enviada) {
         Long id = enviada.getId();
         if (id == null) {
@@ -106,7 +95,6 @@ public class TarefaService {
                 .orElseThrow(() -> new DadosInvalidosException("A categoria " + id + " não existe"));
     }
 
-    /** Evita que o banco recuse o INSERT/UPDATE (e a API devolva 500) por texto maior que a coluna. */
     private void validarTamanhos(Tarefa tarefa) {
         if (tarefa.getTitulo() != null && tarefa.getTitulo().length() > Tarefa.TAMANHO_TITULO) {
             throw new DadosInvalidosException(

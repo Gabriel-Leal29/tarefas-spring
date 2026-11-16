@@ -31,10 +31,6 @@ public class CategoriaService {
         return repository.findById(id).orElseThrow(() -> new CategoriaNaoEncontradaException(id));
     }
 
-    /**
-     * Tarefas da categoria, lidas pelo lado inverso do relacionamento (Categoria.tarefas).
-     * A lista é LAZY, então precisa ser carregada aqui, com a transação ainda aberta.
-     */
     @Transactional(readOnly = true)
     public List<Tarefa> listarTarefas(Long id) {
         return List.copyOf(buscar(id).getTarefas());
@@ -62,7 +58,6 @@ public class CategoriaService {
         return atual;
     }
 
-    /** Só exclui categoria vazia: as tarefas apontam para ela pela chave estrangeira. */
     @Transactional
     public void excluir(Long id) {
         Categoria categoria = buscar(id);
@@ -72,7 +67,6 @@ public class CategoriaService {
         repository.delete(categoria);
     }
 
-    /** Devolve o nome sem espaços nas pontas, ou lança 400 se for inválido. */
     private String validarNome(String nome) {
         if (nome == null || nome.isBlank()) {
             throw new DadosInvalidosException("O campo 'nome' é obrigatório");

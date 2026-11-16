@@ -9,16 +9,8 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-/**
- * Repositório JPA: o Spring Data gera a implementação em tempo de execução.
- * O CRUD básico (findById, save, existsById, deleteById...) vem de {@link JpaRepository}.
- */
 public interface TarefaRepository extends JpaRepository<Tarefa, Long> {
 
-    /**
-     * Listagem com filtros opcionais: o filtro que vier nulo não é aplicado.
-     * O "left join fetch" traz a categoria na mesma consulta (e mantém as tarefas sem categoria).
-     */
     @Query("""
             select t from Tarefa t
             left join fetch t.categoria

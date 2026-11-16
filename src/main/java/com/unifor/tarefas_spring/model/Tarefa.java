@@ -13,11 +13,6 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
-/**
- * Entidade JPA mapeada para a tabela {@code tarefas}. Também é usada como corpo das requisições
- * POST e PATCH: no PATCH, os campos que vierem nulos (não enviados) não são alterados.
- * Os getters e setters são gerados pelo Lombok.
- */
 @Entity
 @Table(name = "tarefas")
 @Getter
@@ -27,7 +22,6 @@ public class Tarefa {
     public static final int TAMANHO_TITULO = 150;
     public static final int TAMANHO_DESCRICAO = 1000;
 
-    /** Chave primária gerada pelo banco (AUTO_INCREMENT no MySQL). */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -38,7 +32,6 @@ public class Tarefa {
     @Column(length = TAMANHO_DESCRICAO)
     private String descricao;
 
-    /** Gravado como texto (PENDENTE, EM_ANDAMENTO...), e não pela posição no enum. */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status;
@@ -47,11 +40,6 @@ public class Tarefa {
     @Column(nullable = false)
     private Prioridade prioridade;
 
-    /**
-     * Lado dono do relacionamento N:1: cria a coluna categoria_id (chave estrangeira para categorias).
-     * É opcional (uma tarefa pode não ter categoria). O @ManyToOne é carregado junto com a tarefa
-     * (EAGER, o padrão), então a categoria sempre aparece no JSON da tarefa.
-     */
     @ManyToOne
     @JoinColumn(name = "categoria_id")
     private Categoria categoria;

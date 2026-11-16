@@ -25,9 +25,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Testa a API de ponta a ponta (controller → service → JPA) com o H2 em memória no lugar do MySQL.
- */
 @SpringBootTest(properties = "spring.datasource.url=jdbc:h2:mem:api;MODE=MySQL")
 @AutoConfigureMockMvc
 class ApiIntegracaoTests {
@@ -49,7 +46,6 @@ class ApiIntegracaoTests {
 
     @Test
     void crudDeTarefaComValoresPadrao() throws Exception {
-        // O id enviado no corpo é ignorado
         long id = idDe(criar("/tarefas", """
                 {"id": 999, "titulo": "Estudar JPA"}""")
                 .andExpect(jsonPath("$.id").value(not(999)))
@@ -89,7 +85,6 @@ class ApiIntegracaoTests {
                 .andExpect(jsonPath("$.nome").value("Faculdade"))
                 .andReturn().getResponse().getContentAsString());
 
-        // Nome repetido (sem diferenciar maiúsculas) → 409
         mvc.perform(post("/categorias").contentType(MediaType.APPLICATION_JSON).content("""
                         {"nome": "FACULDADE"}"""))
                 .andExpect(status().isConflict());
@@ -121,19 +116,15 @@ class ApiIntegracaoTests {
                 .andReturn().getResponse().getContentAsString());
         criar("/tarefas", "{\"titulo\": \"Sem categoria\"}");
 
-        // Listagem traz também as tarefas sem categoria (left join)
         mvc.perform(get("/tarefas")).andExpect(jsonPath("$", hasSize(2)));
 
-        // Lado inverso do relacionamento: Categoria.tarefas
         mvc.perform(get("/categorias/" + estudos + "/tarefas"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].titulo").value("Ler sobre Docker"));
 
-        // Categoria com tarefas não pode ser excluída
         mvc.perform(delete("/categorias/" + estudos)).andExpect(status().isConflict());
 
-        // Categoria inexistente ou sem id → 400
         mvc.perform(post("/tarefas").contentType(MediaType.APPLICATION_JSON).content("""
                         {"titulo": "x", "categoria": {"id": 9999}}"""))
                 .andExpect(status().isBadRequest())
@@ -142,7 +133,6 @@ class ApiIntegracaoTests {
                         {"titulo": "x", "categoria": {}}"""))
                 .andExpect(status().isBadRequest());
 
-        // PATCH troca a categoria
         mvc.perform(patch("/tarefas/" + tarefa).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"categoria\": {\"id\": " + casa + "}}"))
                 .andExpect(status().isOk())

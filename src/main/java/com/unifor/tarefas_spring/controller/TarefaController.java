@@ -30,24 +30,20 @@ public class TarefaController {
         this.service = service;
     }
 
-    /** GET /tarefas, com filtros opcionais: ?status=PENDENTE&prioridade=ALTA */
     @GetMapping
     public ResponseEntity<List<Tarefa>> listar(@RequestParam(required = false) Status status,
                                                @RequestParam(required = false) Prioridade prioridade) {
         return ResponseEntity.ok(service.listar(status, prioridade));
     }
 
-    /** GET /tarefas/{id} */
     @GetMapping("/{id}")
     public ResponseEntity<Tarefa> buscar(@PathVariable Long id) {
         return ResponseEntity.ok(service.buscar(id));
     }
 
-    /** POST /tarefas: 201 Created + header Location com o endereço da nova tarefa */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Tarefa> criar(@RequestBody Tarefa tarefa) {
         Tarefa salva = service.criar(tarefa);
-        // Só o caminho (ex.: /tarefas/1), sem http://host:porta, igual à versão Servlet
         String caminho = ServletUriComponentsBuilder.fromCurrentRequestUri()
                 .path("/{id}")
                 .buildAndExpand(salva.getId())
@@ -55,13 +51,11 @@ public class TarefaController {
         return ResponseEntity.created(URI.create(caminho)).body(salva);
     }
 
-    /** PATCH /tarefas/{id}: altera só os campos enviados e devolve a tarefa atualizada */
     @PatchMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Tarefa> editar(@PathVariable Long id, @RequestBody Tarefa alteracoes) {
         return ResponseEntity.ok(service.editar(id, alteracoes));
     }
 
-    /** DELETE /tarefas/{id}: 204 No Content, sem corpo */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluir(@PathVariable Long id) {
         service.excluir(id);
