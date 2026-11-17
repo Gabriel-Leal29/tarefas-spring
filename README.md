@@ -61,8 +61,7 @@ Tomcat (ele está com escopo `provided` no `pom.xml`). Em *Edit Configurations >
 |---|---|
 | `Dockerfile` | receita da imagem da aplicação, em duas etapas (build com Maven, execução só com o JRE) |
 | `.dockerignore` | o que não entra no contexto do build (target/, .git/, .idea/...) |
-| `docker-compose.yml` | define os serviços `db` e `app`, o volume `dados-mysql` e a rede `rede-tarefas` |
-| `.env.example` | exemplo das variáveis que podem ser trocadas (copie para `.env`) |
+| `docker-compose.yml` | define os serviços `db` e `app`, as variáveis de ambiente, o volume `dados-mysql` e a rede `rede-tarefas` |
 
 ### Como os serviços se conectam
 
@@ -85,16 +84,28 @@ Tomcat (ele está com escopo `provided` no `pom.xml`). Em *Edit Configurations >
 
 ### Variáveis de ambiente
 
-O `docker-compose.yml` usa `${VARIAVEL:-padrão}`: sem `.env`, valem os padrões abaixo.
+Definidas no bloco `environment:` de cada serviço do `docker-compose.yml`.
 
-| Variável | Padrão | Uso |
+**Serviço `db`** (lidas pela imagem oficial do MySQL):
+
+| Variável | Valor | Uso |
 |---|---|---|
-| `DB_NAME` | `tarefas` | banco criado no MySQL e usado pela aplicação |
-| `DB_USER` | `tarefas` | usuário criado no MySQL e usado pela aplicação |
-| `DB_PASSWORD` | `tarefas` | senha desse usuário |
-| `DB_ROOT_PASSWORD` | `root` | senha do root do MySQL |
-| `DB_PORT_HOST` | `3306` | porta do MySQL no computador |
-| `APP_PORT_HOST` | `8080` | porta da API no computador |
+| `MYSQL_DATABASE` | `tarefas` | banco criado na primeira inicialização |
+| `MYSQL_USER` | `tarefas` | usuário criado para a aplicação |
+| `MYSQL_PASSWORD` | `tarefas` | senha desse usuário |
+| `MYSQL_ROOT_PASSWORD` | `root` | senha do root (usada também no healthcheck) |
+| `TZ` | `America/Sao_Paulo` | fuso horário do container |
+
+**Serviço `app`** (lidas pelo `application.properties`, ex.: `${DB_HOST:localhost}`):
+
+| Variável | Valor | Uso |
+|---|---|---|
+| `DB_HOST` | `db` | nome do serviço do banco, que funciona como hostname dentro da rede |
+| `DB_PORT` | `3306` | porta do MySQL dentro da rede |
+| `DB_NAME` | `tarefas` | banco usado na URL JDBC |
+| `DB_USER` | `tarefas` | usuário da conexão |
+| `DB_PASSWORD` | `tarefas` | senha da conexão |
+| `TZ` | `America/Sao_Paulo` | fuso horário do container |
 
 As credenciais do banco só são aplicadas quando o volume está vazio (primeira inicialização). Para trocá-las depois,
 é preciso recriar o volume com `docker compose down -v`.

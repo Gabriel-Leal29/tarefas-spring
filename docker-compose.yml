@@ -1,8 +1,4 @@
 # Sobe o ambiente inteiro (banco + aplicação) com:  docker compose up -d
-#
-# As variáveis ${...} são lidas do arquivo .env (se existir) ou do ambiente do terminal.
-# O valor depois de ":-" é o padrão, usado quando a variável não foi definida.
-# Veja o .env.example para os nomes.
 
 services:
 
@@ -11,15 +7,16 @@ services:
     image: mysql:8.4
     container_name: tarefas-db
     environment:
-      # Na primeira inicialização (volume vazio), a imagem do MySQL cria o banco e o usuário abaixo
-      MYSQL_DATABASE: ${DB_NAME:-tarefas}
-      MYSQL_USER: ${DB_USER:-tarefas}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-tarefas}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      # Variáveis lidas pela imagem do MySQL. Na primeira inicialização (volume vazio),
+      # ela cria o banco e o usuário abaixo e define a senha do root
+      MYSQL_DATABASE: tarefas
+      MYSQL_USER: tarefas
+      MYSQL_PASSWORD: tarefas
+      MYSQL_ROOT_PASSWORD: root
       TZ: America/Sao_Paulo
     ports:
       # host:container. Permite acessar o banco de fora (IntelliJ, DBeaver, app rodando pela IDE)
-      - "${DB_PORT_HOST:-3306}:3306"
+      - "3306:3306"
     volumes:
       # Volume nomeado: os dados ficam fora do container e sobrevivem a "docker compose down"
       - dados-mysql:/var/lib/mysql
@@ -43,16 +40,16 @@ services:
       db:
         condition: service_healthy   # espera o healthcheck do MySQL, e não só o container iniciar
     environment:
-      # Lidas no application.properties: ${DB_HOST}, ${DB_PORT}...
+      # Variáveis lidas no application.properties: ${DB_HOST}, ${DB_PORT}...
       # "db" é o nome do serviço acima: dentro da rede do compose, ele funciona como hostname
       DB_HOST: db
       DB_PORT: 3306
-      DB_NAME: ${DB_NAME:-tarefas}
-      DB_USER: ${DB_USER:-tarefas}
-      DB_PASSWORD: ${DB_PASSWORD:-tarefas}
+      DB_NAME: tarefas
+      DB_USER: tarefas
+      DB_PASSWORD: tarefas
       TZ: America/Sao_Paulo
     ports:
-      - "${APP_PORT_HOST:-8080}:8080"
+      - "8080:8080"
     networks:
       - rede-tarefas
     restart: on-failure
