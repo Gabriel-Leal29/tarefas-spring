@@ -124,7 +124,6 @@ tarefas    (id PK, titulo, descricao, status, prioridade, categoria_id FK → ca
 ```
 src/main/java/com/unifor/tarefas_spring/
 ├── TarefasSpringApplication.java   main(): sobe o Spring e o Tomcat embutido
-├── ServletInitializer.java         entrada usada se o .war for publicado em um servidor externo
 ├── controller/
 │   ├── TarefaController.java       endpoints de /tarefas
 │   ├── CategoriaController.java    endpoints de /categorias
