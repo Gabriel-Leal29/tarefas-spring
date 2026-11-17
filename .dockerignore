@@ -1,4 +1,3 @@
-# O que não precisa ir para dentro do build da imagem (só o pom.xml e o src/ são usados)
 target/
 .git/
 .idea/

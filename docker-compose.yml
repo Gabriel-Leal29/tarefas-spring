@@ -1,47 +1,35 @@
-# Sobe o ambiente inteiro (banco + aplicação) com:  docker compose up -d
-
 services:
 
-  # ---------- Banco de dados ----------
   db:
     image: mysql:8.4
     container_name: tarefas-db
     environment:
-      # Variáveis lidas pela imagem do MySQL. Na primeira inicialização (volume vazio),
-      # ela cria o banco e o usuário abaixo e define a senha do root
       MYSQL_DATABASE: tarefas
       MYSQL_USER: tarefas
       MYSQL_PASSWORD: tarefas
       MYSQL_ROOT_PASSWORD: root
       TZ: America/Sao_Paulo
     ports:
-      # host:container. Permite acessar o banco de fora (IntelliJ, DBeaver, app rodando pela IDE)
       - "3306:3306"
     volumes:
-      # Volume nomeado: os dados ficam fora do container e sobrevivem a "docker compose down"
       - dados-mysql:/var/lib/mysql
     networks:
       - rede-tarefas
     healthcheck:
-      # Só fica "healthy" quando o MySQL aceita conexões pela rede (127.0.0.1 força TCP),
-      # e não durante a inicialização, em que ele roda sem rede para criar o banco
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
       interval: 5s
       timeout: 5s
       retries: 20
       start_period: 30s
 
-  # ---------- Aplicação Spring Boot ----------
   app:
-    build: .                      # monta a imagem a partir do Dockerfile desta pasta
+    build: .
     image: tarefas-spring:latest
     container_name: tarefas-app
     depends_on:
       db:
-        condition: service_healthy   # espera o healthcheck do MySQL, e não só o container iniciar
+        condition: service_healthy
     environment:
-      # Variáveis lidas no application.properties: ${DB_HOST}, ${DB_PORT}...
-      # "db" é o nome do serviço acima: dentro da rede do compose, ele funciona como hostname
       DB_HOST: db
       DB_PORT: 3306
       DB_NAME: tarefas
