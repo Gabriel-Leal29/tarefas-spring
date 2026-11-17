@@ -24,12 +24,10 @@ public class TarefaService {
         this.categoriaRepository = categoriaRepository;
     }
 
-    @Transactional(readOnly = true)
     public List<Tarefa> listar(Status status, Prioridade prioridade) {
         return repository.listar(status, prioridade);
     }
 
-    @Transactional(readOnly = true)
     public Tarefa buscar(Long id) {
         return repository.findById(id).orElseThrow(() -> new TarefaNaoEncontradaException(id));
     }

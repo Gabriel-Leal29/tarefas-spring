@@ -21,12 +21,10 @@ public class CategoriaService {
         this.repository = repository;
     }
 
-    @Transactional(readOnly = true)
     public List<Categoria> listar() {
         return repository.findAll(Sort.by("id"));
     }
 
-    @Transactional(readOnly = true)
     public Categoria buscar(Long id) {
         return repository.findById(id).orElseThrow(() -> new CategoriaNaoEncontradaException(id));
     }
